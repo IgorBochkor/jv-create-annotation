@@ -28,14 +28,15 @@ public class Injector {
                             && UserDaoImpl.class.isAnnotationPresent(Dao.class)) {
                         field.set(instance, Factory.getUserDao());
                     } else {
-                        throw new AnnotationException("Implement class can't"
-                                + " contain @Dao annotation!");
+                        throw new AnnotationException("Class that implements "
+                                + field.getAnnotatedType().getType()
+                                + " can't contain @Dao annotation!");
                     }
                 }
             }
         } catch (InstantiationException | IllegalAccessException
                 | InvocationTargetException | NoSuchMethodException e) {
-            throw new RuntimeException("Can't create Instance or NoSuch methodException");
+            throw new RuntimeException("Can't create Instance or NoSuch methodException", e);
         }
         return instance;
     }
