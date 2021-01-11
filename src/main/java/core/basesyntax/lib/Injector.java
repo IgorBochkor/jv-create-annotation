@@ -4,7 +4,7 @@ import core.basesyntax.dao.BetDao;
 import core.basesyntax.dao.BetDaoImpl;
 import core.basesyntax.dao.UserDao;
 import core.basesyntax.dao.UserDaoImpl;
-import core.basesyntax.exception.MyException;
+import core.basesyntax.exception.AnnotationException;
 import core.basesyntax.factory.Factory;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -20,21 +20,16 @@ public class Injector {
             Field[] declaredFields = clazz.getDeclaredFields();
             for (Field field : declaredFields) {
                 field.setAccessible(true);
-                if (field.getType().equals(BetDao.class) && isInjectAnnotation(field)) {
-                    if (BetDaoImpl.class.isAnnotationPresent(Dao.class)) {
+                if (field.getAnnotation(Inject.class) != null) {
+                    if (BetDaoImpl.class.isAnnotationPresent(Dao.class)
+                            && field.getType().equals(BetDao.class)) {
                         field.set(instance, Factory.getBetDao());
+                    } else if (field.getType().equals(UserDao.class)
+                            && UserDaoImpl.class.isAnnotationPresent(Dao.class)) {
+                        field.set(instance, Factory.getUserDao());
                     } else {
-                        throw new MyException("Class " + BetDaoImpl.class.getSimpleName()
-                                + " can't contain Dao annotation!");
-                    }
-                }
-
-                if (field.getType().equals(UserDao.class) && isInjectAnnotation(field)) {
-                    if (UserDaoImpl.class.isAnnotationPresent(Dao.class)) {
-                        field.set(instance, new UserDaoImpl());
-                    } else {
-                        throw new MyException("Class " + UserDaoImpl.class.getSimpleName()
-                                + " can't contain Dao annotation!");
+                        throw new AnnotationException("Implement class can't"
+                                + " contain @Dao annotation!");
                     }
                 }
             }
@@ -43,9 +38,5 @@ public class Injector {
             throw new RuntimeException("Can't create Instance or NoSuch methodException");
         }
         return instance;
-    }
-
-    private static boolean isInjectAnnotation(Field field) {
-        return field.getAnnotation(Inject.class) != null;
     }
 }
